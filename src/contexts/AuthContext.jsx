@@ -28,15 +28,7 @@ export const AuthProvider = ({ children }) => {
     const getInitialSession = async () => {
       try {
         if (!isSupabaseConfigured) {
-          console.log('Supabase not configured, using demo mode');
-          // Fallback to demo user for development
-          const demoUser = {
-            id: 'demo-user',
-            email: 'demo@example.com',
-            user_metadata: { full_name: 'Demo User' }
-          };
-          setUser(demoUser);
-          setIsAuthenticated(true);
+          console.error('Supabase not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.');
           setIsLoading(false);
           return;
         }
@@ -63,6 +55,10 @@ export const AuthProvider = ({ children }) => {
 
     getInitialSession();
 
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -85,9 +81,13 @@ export const AuthProvider = ({ children }) => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [isSupabaseConfigured]);
 
   const signUp = async (email, password, options = {}) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Authentication not configured. Please check your environment variables.' };
+    }
+    
     setIsLoading(true);
     try {
       console.log('Attempting sign up for:', email);
@@ -134,6 +134,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signIn = async (email, password) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Authentication not configured. Please check your environment variables.' };
+    }
+    
     setIsLoading(true);
     try {
       console.log('Attempting sign in for:', email);
@@ -166,6 +170,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithOAuth = async (provider) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Authentication not configured. Please check your environment variables.' };
+    }
+    
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -187,18 +195,33 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('Error signing out:', error);
+        }
       }
+      
+      // Always clear local state regardless
+      setSession(null);
+      setUser(null);
+      setIsAuthenticated(false);
     } catch (error) {
       console.error('Error signing out:', error);
+      // Still clear local state on error
+      setSession(null);
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   const resetPassword = async (email) => {
+    if (!isSupabaseConfigured) {
+      return { success: false, error: 'Authentication not configured. Please check your environment variables.' };
+    }
+    
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email);
       
@@ -240,6 +263,7 @@ export const AuthProvider = ({ children }) => {
     session,
     isAuthenticated,
     isLoading,
+    isSupabaseConfigured,
     signUp,
     signIn,
     signInWithOAuth,

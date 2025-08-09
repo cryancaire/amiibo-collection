@@ -71,7 +71,7 @@ export const LoginForm = () => {
               fontSize: '14px',
               outline: 'none'
             }}
-            placeholder={isSignUp ? "your@email.com" : "demo@example.com"}
+            placeholder="your@email.com"
             required
           />
         </div>
@@ -100,7 +100,7 @@ export const LoginForm = () => {
               fontSize: '14px',
               outline: 'none'
             }}
-            placeholder={isSignUp ? "Create a password" : "password"}
+            placeholder={isSignUp ? "Create a password" : "Enter your password"}
             required
           />
         </div>
@@ -177,20 +177,6 @@ export const LoginForm = () => {
         </button>
       </div>
 
-      {!isSignUp && (
-        <div style={{ 
-          marginTop: '16px', 
-          padding: '12px',
-          backgroundColor: colors.background,
-          borderRadius: '4px',
-          fontSize: '12px',
-          color: colors.text.secondary
-        }}>
-          <strong>Demo credentials (for testing):</strong><br />
-          Email: demo@example.com<br />
-          Password: password
-        </div>
-      )}
     </div>
   );
 };

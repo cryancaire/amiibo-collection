@@ -12,7 +12,7 @@ import { useMediaQuery } from "./hooks/useMediaQuery";
 
 function AppContent() {
   const { colors, isDarkMode, toggleTheme } = useTheme();
-  const { isAuthenticated, isLoading, user, signOut } = useAuth();
+  const { isAuthenticated, isLoading, user, signOut, isSupabaseConfigured } = useAuth();
   const isMobile = useMediaQuery('(max-width: 767px)');
   const isTablet = useMediaQuery('(max-width: 1023px)');
 
@@ -23,6 +23,58 @@ function AppContent() {
         style={{ backgroundColor: colors.background }}
       >
         <div style={{ color: colors.text.primary }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div 
+        className="h-screen flex items-center justify-center" 
+        style={{ backgroundColor: colors.background }}
+      >
+        <div style={{ 
+          maxWidth: '500px', 
+          padding: '32px', 
+          textAlign: 'center',
+          backgroundColor: colors.surface,
+          borderRadius: '8px',
+          border: `1px solid ${colors.border}`
+        }}>
+          <h2 style={{ 
+            color: colors.text.primary, 
+            marginBottom: '16px',
+            fontSize: '24px',
+            fontWeight: '600'
+          }}>
+            Configuration Required
+          </h2>
+          <p style={{ 
+            color: colors.text.secondary, 
+            marginBottom: '24px',
+            lineHeight: '1.6'
+          }}>
+            This application requires Supabase configuration to function. Please set up your environment variables:
+          </p>
+          <div style={{ 
+            backgroundColor: colors.background, 
+            padding: '16px', 
+            borderRadius: '4px',
+            marginBottom: '24px',
+            fontFamily: 'monospace',
+            fontSize: '14px',
+            textAlign: 'left'
+          }}>
+            <div style={{ color: colors.text.primary }}>VITE_SUPABASE_URL=your-supabase-url</div>
+            <div style={{ color: colors.text.primary }}>VITE_SUPABASE_ANON_KEY=your-anon-key</div>
+          </div>
+          <p style={{ 
+            color: colors.text.secondary, 
+            fontSize: '14px'
+          }}>
+            Please check your .env file and restart the application.
+          </p>
+        </div>
       </div>
     );
   }
