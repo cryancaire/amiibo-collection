@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { supabase } from '../../lib/supabase';
 
 export const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -8,8 +9,32 @@ export const LoginForm = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
-  const { signIn, signUp, isLoading } = useAuth();
+  const [randomAmiibo, setRandomAmiibo] = useState(null);
+  const { signIn, signUp, isLoading, isSupabaseConfigured } = useAuth();
   const { colors } = useTheme();
+
+  // Load a random amiibo image for branding
+  useEffect(() => {
+    const loadRandomAmiibo = async () => {
+      if (!isSupabaseConfigured) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('amiibos')
+          .select('name, image_url')
+          .limit(1)
+          .order('id'); // Get first amiibo as fallback
+        
+        if (data && data.length > 0) {
+          setRandomAmiibo(data[0]);
+        }
+      } catch (error) {
+        console.log('Could not load amiibo image for login page');
+      }
+    };
+
+    loadRandomAmiibo();
+  }, [isSupabaseConfigured]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +61,76 @@ export const LoginForm = () => {
       borderRadius: '8px',
       border: `1px solid ${colors.border}`
     }}>
+      {/* App branding */}
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: `1px solid ${colors.border}`
+      }}>
+        <div style={{ 
+          width: '64px', 
+          height: '64px', 
+          margin: '0 auto 12px',
+          backgroundColor: randomAmiibo ? colors.background : '#10b981',
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: `2px solid ${colors.border}`,
+          overflow: 'hidden'
+        }}>
+          {randomAmiibo ? (
+            <img 
+              src={randomAmiibo.image_url}
+              alt={`${randomAmiibo.name} Amiibo`}
+              style={{
+                width: '56px',
+                height: '56px',
+                objectFit: 'cover'
+              }}
+              onError={(e) => {
+                // Fallback to SVG if image fails to load
+                e.target.style.display = 'none';
+                e.target.nextElementSibling.style.display = 'block';
+              }}
+            />
+          ) : null}
+          <svg 
+            width="24" 
+            height="24" 
+            viewBox="0 0 32 32" 
+            fill="none"
+            style={{ display: randomAmiibo ? 'none' : 'block' }}
+          >
+            <g fill="white">
+              <circle cx="16" cy="9" r="3"/>
+              <ellipse cx="16" cy="16" rx="2.5" ry="4"/>
+              <ellipse cx="12" cy="14" rx="1.5" ry="2" transform="rotate(-20 12 14)"/>
+              <ellipse cx="20" cy="14" rx="1.5" ry="2" transform="rotate(20 20 14)"/>
+              <ellipse cx="14" cy="22" rx="1.5" ry="3"/>
+              <ellipse cx="18" cy="22" rx="1.5" ry="3"/>
+              <ellipse cx="16" cy="26" rx="4" ry="1.5" opacity="0.6"/>
+            </g>
+          </svg>
+        </div>
+        <h1 style={{ 
+          color: colors.text.primary, 
+          fontSize: '20px',
+          fontWeight: '700',
+          margin: '0 0 4px 0'
+        }}>
+          My Amiibo Collection
+        </h1>
+        <p style={{ 
+          color: colors.text.secondary, 
+          fontSize: '14px',
+          margin: 0
+        }}>
+          Manage your amiibo collection and wishlist
+        </p>
+      </div>
+
       <h2 style={{ 
         color: colors.text.primary, 
         marginBottom: '24px', 
@@ -43,7 +138,7 @@ export const LoginForm = () => {
         fontSize: '24px',
         fontWeight: '600'
       }}>
-        {isSignUp ? 'Sign Up' : 'Sign In'}
+        {isSignUp ? 'Create Account' : 'Welcome Back'}
       </h2>
       
       <form onSubmit={handleSubmit}>
