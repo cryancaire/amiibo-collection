@@ -12,7 +12,9 @@ export const AmiiboCardBrowser = ({
   onAddToWishlist, 
   onRemoveFromWishlist, 
   showRemoveOnly = false,
-  showWishlistOnly = false 
+  showWishlistOnly = false,
+  isPublicView = false,
+  showActionsForPublic = false
 }) => {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -174,8 +176,8 @@ export const AmiiboCardBrowser = ({
           )}
         </div>
 
-        {/* Action buttons */}
-        {showWishlistOnly ? (
+        {/* Action buttons - hide for public view unless specifically allowed */}
+        {isPublicView && !showActionsForPublic ? null : showWishlistOnly ? (
           <div style={{
             display: 'flex',
             gap: '8px'
