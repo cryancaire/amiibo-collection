@@ -210,11 +210,15 @@ export const AmiiboBrowser = () => {
     <div>
       {/* Search & Filter */}
       <div style={{ 
+        position: 'sticky',
+        top: '0',
+        zIndex: 10,
         marginBottom: '24px',
         padding: '16px',
         backgroundColor: colors.surface,
         borderRadius: '8px',
-        border: `1px solid ${colors.border}`
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
       }}>
         <div style={{ 
           display: 'flex', 
