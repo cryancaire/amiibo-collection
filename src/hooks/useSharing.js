@@ -11,13 +11,14 @@ export const useSharing = (type) => {
 
   // Check if user already has an active share
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured || !user?.id) return;
     
     const checkExistingShare = async () => {
       try {
         const { data, error } = await supabase
           .from(tableName)
           .select('*')
+          .eq('user_id', user.id)
           .eq('is_active', true)
           .single();
 
@@ -31,7 +32,7 @@ export const useSharing = (type) => {
     };
 
     checkExistingShare();
-  }, [supabase, tableName, isSupabaseConfigured]);
+  }, [supabase, tableName, isSupabaseConfigured, user?.id]);
 
   const createShare = async ({ title, description }) => {
     if (!isSupabaseConfigured) {

@@ -1,22 +1,22 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
 export const amiiboService = {
   // Get all available amiibos
   async getAllAmiibos() {
     try {
       const { data, error } = await supabase
-        .from('amiibos')
-        .select('*')
-        .order('character');
+        .from("amiibos")
+        .select("*")
+        .order("character");
 
       if (error) {
-        console.error('Error fetching amiibos:', error);
+        console.error("Error fetching amiibos:", error);
         return { data: [], error };
       }
 
       return { data, error: null };
     } catch (error) {
-      console.error('Exception fetching amiibos:', error);
+      console.error("Exception fetching amiibos:", error);
       return { data: [], error };
     }
   },
@@ -25,22 +25,24 @@ export const amiiboService = {
   async getUserCollection(userId) {
     try {
       const { data, error } = await supabase
-        .from('amiibo_collections')
-        .select(`
+        .from("amiibo_collections")
+        .select(
+          `
           *,
           amiibos (*)
-        `)
-        .eq('user_id', userId)
-        .order('acquired_date', { ascending: false });
+        `
+        )
+        .eq("user_id", userId)
+        .order("acquired_date", { ascending: false });
 
       if (error) {
-        console.error('Error fetching user collection:', error);
+        console.error("Error fetching user collection:", error);
         return { data: [], error };
       }
 
       return { data, error: null };
     } catch (error) {
-      console.error('Exception fetching user collection:', error);
+      console.error("Exception fetching user collection:", error);
       return { data: [], error };
     }
   },
@@ -49,34 +51,36 @@ export const amiiboService = {
   async getUserCollectionWithDetails(userId) {
     try {
       const { data, error } = await supabase
-        .from('amiibo_collections')
-        .select(`
+        .from("amiibo_collections")
+        .select(
+          `
           acquired_date,
           condition,
           notes,
           is_favorite,
           amiibos (*)
-        `)
-        .eq('user_id', userId)
-        .order('acquired_date', { ascending: false });
+        `
+        )
+        .eq("user_id", userId)
+        .order("acquired_date", { ascending: false });
 
       if (error) {
-        console.error('Error fetching user collection with details:', error);
+        console.error("Error fetching user collection with details:", error);
         return { data: [], error };
       }
 
       // Transform the data to return just amiibo objects with collection metadata
-      const amiibos = data.map(item => ({
+      const amiibos = data.map((item) => ({
         ...item.amiibos,
         acquired_date: item.acquired_date,
         condition: item.condition,
         notes: item.notes,
-        is_favorite: item.is_favorite
+        is_favorite: item.is_favorite,
       }));
 
       return { data: amiibos, error: null };
     } catch (error) {
-      console.error('Exception fetching user collection with details:', error);
+      console.error("Exception fetching user collection with details:", error);
       return { data: [], error };
     }
   },
@@ -87,28 +91,27 @@ export const amiiboService = {
       const collectionData = {
         user_id: userId,
         amiibo_id: amiiboId,
-        condition: options.condition || 'mint',
-        notes: options.notes || '',
+        condition: options.condition || "mint",
+        notes: options.notes || "",
         is_favorite: options.isFavorite || false,
-        acquired_date: options.acquiredDate || new Date().toISOString()
+        acquired_date: options.acquiredDate || new Date().toISOString(),
       };
 
       const { data, error } = await supabase
-        .from('amiibo_collections')
-        .insert([collectionData])
-        .select(`
+        .from("amiibo_collections")
+        .insert([collectionData]).select(`
           *,
           amiibos (*)
         `);
 
       if (error) {
-        console.error('Error adding to collection:', error);
+        console.error("Error adding to collection:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true, data };
     } catch (error) {
-      console.error('Exception adding to collection:', error);
+      console.error("Exception adding to collection:", error);
       return { success: false, error: error.message };
     }
   },
@@ -117,20 +120,20 @@ export const amiiboService = {
   async removeFromCollection(userId, amiiboId) {
     try {
       const { data, error } = await supabase
-        .from('amiibo_collections')
+        .from("amiibo_collections")
         .delete()
-        .eq('user_id', userId)
-        .eq('amiibo_id', amiiboId)
+        .eq("user_id", userId)
+        .eq("amiibo_id", amiiboId)
         .select();
 
       if (error) {
-        console.error('Error removing from collection:', error);
+        console.error("Error removing from collection:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true, data };
     } catch (error) {
-      console.error('Exception removing from collection:', error);
+      console.error("Exception removing from collection:", error);
       return { success: false, error: error.message };
     }
   },
@@ -139,41 +142,42 @@ export const amiiboService = {
   async checkOwnership(userId, amiiboId) {
     try {
       const { data, error } = await supabase
-        .from('amiibo_collections')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('amiibo_id', amiiboId)
+        .from("amiibo_collections")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("amiibo_id", amiiboId)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        console.error('Error checking ownership:', error);
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = no rows returned
+        console.error("Error checking ownership:", error);
         return { owned: false, error };
       }
 
       return { owned: !!data, error: null };
     } catch (error) {
-      console.error('Exception checking ownership:', error);
+      console.error("Exception checking ownership:", error);
       return { owned: false, error };
     }
   },
 
   // Get amiibos by character/series
-  async searchAmiibos(searchTerm, filterBy = 'character') {
+  async searchAmiibos(searchTerm, filterBy = "character") {
     try {
       const { data, error } = await supabase
-        .from('amiibos')
-        .select('*')
+        .from("amiibos")
+        .select("*")
         .ilike(filterBy, `%${searchTerm}%`)
-        .order('character');
+        .order("character");
 
       if (error) {
-        console.error('Error searching amiibos:', error);
+        console.error("Error searching amiibos:", error);
         return { data: [], error };
       }
 
       return { data, error: null };
     } catch (error) {
-      console.error('Exception searching amiibos:', error);
+      console.error("Exception searching amiibos:", error);
       return { data: [], error };
     }
   },
@@ -182,22 +186,24 @@ export const amiiboService = {
   async getUserWishlist(userId) {
     try {
       const { data, error } = await supabase
-        .from('user_wishlists')
-        .select(`
+        .from("user_wishlists")
+        .select(
+          `
           *,
           amiibos (*)
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        `
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching user wishlist:', error);
+        console.error("Error fetching user wishlist:", error);
         return { data: [], error };
       }
 
       return { data, error: null };
     } catch (error) {
-      console.error('Exception fetching user wishlist:', error);
+      console.error("Exception fetching user wishlist:", error);
       return { data: [], error };
     }
   },
@@ -209,25 +215,24 @@ export const amiiboService = {
         user_id: userId,
         amiibo_id: amiiboId,
         priority: options.priority || 3,
-        notes: options.notes || ''
+        notes: options.notes || "",
       };
 
       const { data, error } = await supabase
-        .from('user_wishlists')
-        .insert([wishlistData])
-        .select(`
+        .from("user_wishlists")
+        .insert([wishlistData]).select(`
           *,
           amiibos (*)
         `);
 
       if (error) {
-        console.error('Error adding to wishlist:', error);
+        console.error("Error adding to wishlist:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true, data };
     } catch (error) {
-      console.error('Exception adding to wishlist:', error);
+      console.error("Exception adding to wishlist:", error);
       return { success: false, error: error.message };
     }
   },
@@ -236,20 +241,20 @@ export const amiiboService = {
   async removeFromWishlist(userId, amiiboId) {
     try {
       const { data, error } = await supabase
-        .from('user_wishlists')
+        .from("user_wishlists")
         .delete()
-        .eq('user_id', userId)
-        .eq('amiibo_id', amiiboId)
+        .eq("user_id", userId)
+        .eq("amiibo_id", amiiboId)
         .select();
 
       if (error) {
-        console.error('Error removing from wishlist:', error);
+        console.error("Error removing from wishlist:", error);
         return { success: false, error: error.message };
       }
 
       return { success: true, data };
     } catch (error) {
-      console.error('Exception removing from wishlist:', error);
+      console.error("Exception removing from wishlist:", error);
       return { success: false, error: error.message };
     }
   },
@@ -258,32 +263,34 @@ export const amiiboService = {
   async getUserWishlistWithDetails(userId) {
     try {
       const { data, error } = await supabase
-        .from('user_wishlists')
-        .select(`
+        .from("user_wishlists")
+        .select(
+          `
           created_at,
           priority,
           notes,
           amiibos (*)
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        `
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching user wishlist with details:', error);
+        console.error("Error fetching user wishlist with details:", error);
         return { data: [], error };
       }
 
       // Transform the data to return just amiibo objects with wishlist metadata
-      const amiibos = data.map(item => ({
+      const amiibos = data.map((item) => ({
         ...item.amiibos,
         added_date: item.created_at,
         priority: item.priority,
-        notes: item.notes
+        notes: item.notes,
       }));
 
       return { data: amiibos, error: null };
     } catch (error) {
-      console.error('Exception fetching user wishlist with details:', error);
+      console.error("Exception fetching user wishlist with details:", error);
       return { data: [], error };
     }
   },
@@ -293,58 +300,62 @@ export const amiiboService = {
     try {
       // First get all amiibo IDs that the user owns
       const { data: userCollection, error: collectionError } = await supabase
-        .from('amiibo_collections')
-        .select('amiibo_id')
-        .eq('user_id', userId);
+        .from("amiibo_collections")
+        .select("amiibo_id")
+        .eq("user_id", userId);
 
       if (collectionError) {
-        console.error('Error fetching user collection for random amiibos:', collectionError);
+        console.error(
+          "Error fetching user collection for random amiibos:",
+          collectionError
+        );
         return { data: [], error: collectionError };
       }
 
-      const ownedAmiiboIds = userCollection.map(item => item.amiibo_id);
+      const ownedAmiiboIds = userCollection.map((item) => item.amiibo_id);
 
       // Also get user's wishlist IDs
       const { data: userWishlist, error: wishlistError } = await supabase
-        .from('user_wishlists')
-        .select('amiibo_id')
-        .eq('user_id', userId);
+        .from("user_wishlists")
+        .select("amiibo_id")
+        .eq("user_id", userId);
 
       if (wishlistError) {
-        console.error('Error fetching user wishlist for random amiibos:', wishlistError);
+        console.error(
+          "Error fetching user wishlist for random amiibos:",
+          wishlistError
+        );
         return { data: [], error: wishlistError };
       }
 
-      const wishlistedAmiiboIds = userWishlist.map(item => item.amiibo_id);
+      const wishlistedAmiiboIds = userWishlist.map((item) => item.amiibo_id);
 
       // Get random amiibos not in the user's collection
-      let query = supabase
-        .from('amiibos')
-        .select('*');
+      let query = supabase.from("amiibos").select("*");
 
       // Exclude owned amiibos if user has any
       if (ownedAmiiboIds.length > 0) {
-        query = query.not('id', 'in', `(${ownedAmiiboIds.join(',')})`);
+        query = query.not("id", "in", `(${ownedAmiiboIds.join(",")})`);
       }
 
       // Get a larger sample and then limit to avoid predictable ordering
       const { data, error } = await query.limit(limit * 3);
 
       if (error) {
-        console.error('Error fetching random uncollected amiibos:', error);
+        console.error("Error fetching random uncollected amiibos:", error);
         return { data: [], error };
       }
 
       // Shuffle, take the requested number, and add wishlist status
       const shuffled = data.sort(() => Math.random() - 0.5);
-      const randomAmiibos = shuffled.slice(0, limit).map(amiibo => ({
+      const randomAmiibos = shuffled.slice(0, limit).map((amiibo) => ({
         ...amiibo,
-        isWishlisted: wishlistedAmiiboIds.includes(amiibo.id)
+        isWishlisted: wishlistedAmiiboIds.includes(amiibo.id),
       }));
 
       return { data: randomAmiibos, error: null };
     } catch (error) {
-      console.error('Exception fetching random uncollected amiibos:', error);
+      console.error("Exception fetching random uncollected amiibos:", error);
       return { data: [], error };
     }
   },
@@ -354,58 +365,69 @@ export const amiiboService = {
     try {
       // Get total amiibos count
       const { count: totalAmiibos, error: totalError } = await supabase
-        .from('amiibos')
-        .select('*', { count: 'exact', head: true });
+        .from("amiibos")
+        .select("*", { count: "exact", head: true });
 
       if (totalError) {
-        console.error('Error getting total amiibos count:', totalError);
+        console.error("Error getting total amiibos count:", totalError);
       }
 
       // Get user collection count
       const { count: collectionCount, error: collectionError } = await supabase
-        .from('amiibo_collections')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+        .from("amiibo_collections")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
 
       if (collectionError) {
-        console.error('Error getting collection count:', collectionError);
+        console.error("Error getting collection count:", collectionError);
       }
 
       // Get user wishlist count
       const { count: wishlistCount, error: wishlistError } = await supabase
-        .from('user_wishlists')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+        .from("user_wishlists")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
 
       if (wishlistError) {
-        console.error('Error getting wishlist count:', wishlistError);
+        console.error("Error getting wishlist count:", wishlistError);
       }
 
       // Get shared collection stats
-      const { data: sharedCollection, error: sharedCollectionError } = await supabase
-        .from('shared_collections')
-        .select('view_count, is_active')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .single();
+      const { data: sharedCollection, error: sharedCollectionError } =
+        await supabase
+          .from("shared_collections")
+          .select("view_count, is_active")
+          .eq("user_id", userId)
+          .eq("is_active", true)
+          .single();
 
-      if (sharedCollectionError && sharedCollectionError.code !== 'PGRST116') {
-        console.error('Error getting shared collection stats:', sharedCollectionError);
+      if (sharedCollectionError && sharedCollectionError.code !== "PGRST116") {
+        console.error(
+          "Error getting shared collection stats:",
+          sharedCollectionError
+        );
       }
 
       // Get shared wishlist stats
-      const { data: sharedWishlist, error: sharedWishlistError } = await supabase
-        .from('shared_wishlists')
-        .select('view_count, is_active')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .single();
+      const { data: sharedWishlist, error: sharedWishlistError } =
+        await supabase
+          .from("shared_wishlists")
+          .select("view_count, is_active")
+          .eq("user_id", userId)
+          .eq("is_active", true)
+          .single();
 
-      if (sharedWishlistError && sharedWishlistError.code !== 'PGRST116') {
-        console.error('Error getting shared wishlist stats:', sharedWishlistError);
+      if (sharedWishlistError && sharedWishlistError.code !== "PGRST116") {
+        console.error(
+          "Error getting shared wishlist stats:",
+          sharedWishlistError
+        );
       }
 
-      const completionPercentage = totalAmiibos > 0 ? Math.round((collectionCount / totalAmiibos) * 100) : 0;
+      const completionPercentage =
+        totalAmiibos > 0
+          ? Math.round((collectionCount / totalAmiibos) * 100)
+          : 0;
 
       return {
         data: {
@@ -416,25 +438,87 @@ export const amiiboService = {
           sharedCollectionViews: sharedCollection?.view_count || null,
           sharedWishlistViews: sharedWishlist?.view_count || null,
           hasSharedCollection: !!sharedCollection,
-          hasSharedWishlist: !!sharedWishlist
+          hasSharedWishlist: !!sharedWishlist,
         },
-        error: null
+        error: null,
       };
     } catch (error) {
-      console.error('Exception fetching user stats:', error);
-      return { 
-        data: { 
-          totalAmiibos: 0, 
-          collectionCount: 0, 
-          wishlistCount: 0, 
+      console.error("Exception fetching user stats:", error);
+      return {
+        data: {
+          totalAmiibos: 0,
+          collectionCount: 0,
+          wishlistCount: 0,
           completionPercentage: 0,
           sharedCollectionViews: null,
           sharedWishlistViews: null,
           hasSharedCollection: false,
-          hasSharedWishlist: false
-        }, 
-        error 
+          hasSharedWishlist: false,
+        },
+        error,
       };
     }
-  }
+  },
+
+  // Get global statistics for dashboard
+  async getGlobalStats() {
+    try {
+      // Get total amiibos count
+      const { count: totalAmiibos, error: totalError } = await supabase
+        .from("amiibos")
+        .select("*", { count: "exact", head: true });
+
+      if (totalError) {
+        console.error("Error getting total amiibos count:", totalError);
+      }
+
+      // Get total user count from users table
+      const { count: totalUsers, error: usersError } = await supabase
+        .from("users")
+        .select("*", { count: "exact", head: true });
+
+      if (usersError) {
+        console.error("Error getting total users count:", usersError);
+      }
+
+      // Get total collected amiibos count (across all users)
+      const { count: totalCollected, error: collectedError } = await supabase
+        .from("amiibo_collections")
+        .select("*", { count: "exact", head: true });
+
+      if (collectedError) {
+        console.error("Error getting total collected count:", collectedError);
+      }
+
+      // Get total wishlisted amiibos count (across all users)
+      const { count: totalWishlisted, error: wishlistedError } = await supabase
+        .from("user_wishlists")
+        .select("*", { count: "exact", head: true });
+
+      if (wishlistedError) {
+        console.error("Error getting total wishlisted count:", wishlistedError);
+      }
+
+      return {
+        data: {
+          totalAmiibos: totalAmiibos || 0,
+          totalUsers: totalUsers || 0,
+          totalCollected: totalCollected || 0,
+          totalWishlisted: totalWishlisted || 0,
+        },
+        error: null,
+      };
+    } catch (error) {
+      console.error("Exception fetching global stats:", error);
+      return {
+        data: {
+          totalAmiibos: 0,
+          totalUsers: 0,
+          totalCollected: 0,
+          totalWishlisted: 0,
+        },
+        error,
+      };
+    }
+  },
 };

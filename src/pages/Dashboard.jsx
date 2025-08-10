@@ -20,6 +20,12 @@ export const Dashboard = () => {
     hasSharedCollection: false,
     hasSharedWishlist: false,
   });
+  const [globalStats, setGlobalStats] = useState({
+    totalAmiibos: 0,
+    totalUsers: 0,
+    totalCollected: 0,
+    totalWishlisted: 0,
+  });
   const [featuredAmiibos, setFeaturedAmiibos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,6 +42,12 @@ export const Dashboard = () => {
     setIsLoading(true);
 
     try {
+      // Load global stats (available for all users)
+      const globalResult = await amiiboService.getGlobalStats();
+      if (!globalResult.error) {
+        setGlobalStats(globalResult.data);
+      }
+
       // Load user stats
       const statsResult = await amiiboService.getUserStats(user.id);
       if (!statsResult.error) {
@@ -178,6 +190,7 @@ export const Dashboard = () => {
           marginBottom: isMobile ? "24px" : "32px",
         }}
       >
+        {/* Your Stats Box */}
         <div
           style={{
             padding: isMobile ? "16px" : "24px",
@@ -193,7 +206,7 @@ export const Dashboard = () => {
               marginBottom: "12px",
             }}
           >
-            Quick Stats
+            Your Stats
           </h3>
           <div style={{ color: colors.text.secondary }}>
             {isLoading ? (
@@ -314,6 +327,38 @@ export const Dashboard = () => {
             >
               → Manage Wishlist
             </a>
+          </div>
+        </div>
+
+        {/* Global Stats Box */}
+        <div
+          style={{
+            padding: isMobile ? "16px" : "24px",
+            backgroundColor: colors.surface,
+            borderRadius: "8px",
+            border: `1px solid ${colors.border}`,
+          }}
+        >
+          <h3
+            style={{
+              color: colors.text.primary,
+              fontSize: isMobile ? "16px" : "18px",
+              marginBottom: "12px",
+            }}
+          >
+            Global Stats
+          </h3>
+          <div style={{ color: colors.text.secondary }}>
+            {isLoading ? (
+              <p>Loading global stats...</p>
+            ) : (
+              <>
+                <p>Total Amiibos in Database: {globalStats.totalAmiibos}</p>
+                <p>Total Users: {globalStats.totalUsers}</p>
+                <p>Total Collected: {globalStats.totalCollected}</p>
+                <p>Total Wishlisted: {globalStats.totalWishlisted}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
