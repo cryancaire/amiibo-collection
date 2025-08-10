@@ -183,10 +183,13 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
+      // Use environment variable for production URL, fallback to current origin for development
+      const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectUrl,
         },
       });
 
