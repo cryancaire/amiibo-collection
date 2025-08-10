@@ -304,6 +304,19 @@ export const amiiboService = {
 
       const ownedAmiiboIds = userCollection.map(item => item.amiibo_id);
 
+      // Also get user's wishlist IDs
+      const { data: userWishlist, error: wishlistError } = await supabase
+        .from('user_wishlists')
+        .select('amiibo_id')
+        .eq('user_id', userId);
+
+      if (wishlistError) {
+        console.error('Error fetching user wishlist for random amiibos:', wishlistError);
+        return { data: [], error: wishlistError };
+      }
+
+      const wishlistedAmiiboIds = userWishlist.map(item => item.amiibo_id);
+
       // Get random amiibos not in the user's collection
       let query = supabase
         .from('amiibos')
@@ -322,9 +335,12 @@ export const amiiboService = {
         return { data: [], error };
       }
 
-      // Shuffle and take the requested number
+      // Shuffle, take the requested number, and add wishlist status
       const shuffled = data.sort(() => Math.random() - 0.5);
-      const randomAmiibos = shuffled.slice(0, limit);
+      const randomAmiibos = shuffled.slice(0, limit).map(amiibo => ({
+        ...amiibo,
+        isWishlisted: wishlistedAmiiboIds.includes(amiibo.id)
+      }));
 
       return { data: randomAmiibos, error: null };
     } catch (error) {
@@ -365,6 +381,30 @@ export const amiiboService = {
         console.error('Error getting wishlist count:', wishlistError);
       }
 
+      // Get shared collection stats
+      const { data: sharedCollection, error: sharedCollectionError } = await supabase
+        .from('shared_collections')
+        .select('view_count, is_active')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single();
+
+      if (sharedCollectionError && sharedCollectionError.code !== 'PGRST116') {
+        console.error('Error getting shared collection stats:', sharedCollectionError);
+      }
+
+      // Get shared wishlist stats
+      const { data: sharedWishlist, error: sharedWishlistError } = await supabase
+        .from('shared_wishlists')
+        .select('view_count, is_active')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .single();
+
+      if (sharedWishlistError && sharedWishlistError.code !== 'PGRST116') {
+        console.error('Error getting shared wishlist stats:', sharedWishlistError);
+      }
+
       const completionPercentage = totalAmiibos > 0 ? Math.round((collectionCount / totalAmiibos) * 100) : 0;
 
       return {
@@ -372,7 +412,11 @@ export const amiiboService = {
           totalAmiibos: totalAmiibos || 0,
           collectionCount: collectionCount || 0,
           wishlistCount: wishlistCount || 0,
-          completionPercentage
+          completionPercentage,
+          sharedCollectionViews: sharedCollection?.view_count || null,
+          sharedWishlistViews: sharedWishlist?.view_count || null,
+          hasSharedCollection: !!sharedCollection,
+          hasSharedWishlist: !!sharedWishlist
         },
         error: null
       };
@@ -383,7 +427,11 @@ export const amiiboService = {
           totalAmiibos: 0, 
           collectionCount: 0, 
           wishlistCount: 0, 
-          completionPercentage: 0 
+          completionPercentage: 0,
+          sharedCollectionViews: null,
+          sharedWishlistViews: null,
+          hasSharedCollection: false,
+          hasSharedWishlist: false
         }, 
         error 
       };
